@@ -139,7 +139,105 @@ extension FaceDetectionViewController {
       to: result.boundingBox) {
       faceView.leftEye = leftEye // declared in FaceView
     }
+    
+    //13 add other landmarks for the function
+    if let rightEye = landmark(
+      points: landmarks.rightEye?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.rightEye = rightEye
+    }
+        
+    if let leftEyebrow = landmark(
+      points: landmarks.leftEyebrow?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.leftEyebrow = leftEyebrow
+    }
+        
+    if let rightEyebrow = landmark(
+      points: landmarks.rightEyebrow?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.rightEyebrow = rightEyebrow
+    }
+        
+    if let nose = landmark(
+      points: landmarks.nose?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.nose = nose
+    }
+        
+    if let outerLips = landmark(
+      points: landmarks.outerLips?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.outerLips = outerLips
+    }
+        
+    if let innerLips = landmark(
+      points: landmarks.innerLips?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.innerLips = innerLips
+    }
+        
+    if let faceContour = landmark(
+      points: landmarks.faceContour?.normalizedPoints,
+      to: result.boundingBox) {
+      faceView.faceContour = faceContour
+    }
+
   }
+  
+  //14 Define a new method that will update the LaserView. It’s a bit like updateFaceView(for:).
+  func updateLaserView(for result: VNFaceObservation) {
+    
+    laserView.clear()
+      
+    // Get the yaw from the result. The yaw is a number that tells you how much your face is turned. If it’s negative, you’re looking to the left. If it’s positive, you’re looking to the right. Another property is roll
+    let yaw = result.yaw ?? 0.0
+      
+    // this is straight forward no lasers so return
+    if yaw == 0.0 {
+      return
+    }
+      
+    // store the origin points of the lasers, create an array for it.
+    var origins: [CGPoint] = []
+    // laser origin based on left and right pupil
+    if let point = result.landmarks?.leftPupil?.normalizedPoints.first {
+      let origin = landmark(point: point, to: result.boundingBox)
+      origins.append(origin)
+    }
+    if let point = result.landmarks?.rightPupil?.normalizedPoints.first {
+      let origin = landmark(point: point, to: result.boundingBox)
+      origins.append(origin)
+    }
+    //these are just the geometric centers of the eyes. They’re not actually detected pupils. If you were to keep your head still, but look to the left or right, the pupils returned in the VNFaceObservation would not move.
+    
+    //15 add logic to figure out where the lasers will be focused.
+    
+    // Calculate the average y coordinate of the laser origins.
+    let avgY = origins.map { $0.y }.reduce(0.0, +) / CGFloat(origins.count)
+
+    // Determine what the y coordinate of the laser focus point will be based on the average y of the origins. If your pupils are above the middle of the screen, you'll shoot down. Otherwise, you'll shoot up. ++ can use this for our project to detect if users head looking up or down.
+    let focusY = (avgY < midY) ? 0.75 * maxY : 0.25 * maxY
+
+    // Calculate the x coordinate of the laser focus based on the yaw. If you're looking left, you should shoot lasers to the left.
+    let focusX = (yaw.doubleValue < 0.0) ? -100.0 : maxX + 100.0
+        
+    // Create a CGPoint from your two focus coordinates.
+    let focus = CGPoint(x: focusX, y: focusY)
+        
+    // Generate some Lasers and add them to the LaserView.
+    for origin in origins {
+      let laser = Laser(origin: origin, focus: focus)
+      laserView.add(laser: laser)
+    }
+
+    // Tell the iPhone that the LaserView should be redrawn.
+    DispatchQueue.main.async {
+      self.laserView.setNeedsDisplay()
+    }
+
+  }
+
   
   //3 define detectedFace method
   func detectedFace(request: VNRequest, error: Error?) {
@@ -157,13 +255,20 @@ extension FaceDetectionViewController {
 //    let box = result.boundingBox
 //    faceView.boundingBox = convert(rect: box)
 //
-//    // call setNeedsDisplay method to make sure FaceView is redrawn
+     // call setNeedsDisplay method to make sure FaceView is redrawn
 //    DispatchQueue.main.async {
 //      self.faceView.setNeedsDisplay()
 //    }
     
     //10 replaced code above with
-    updateFaceView(for: result)
+//    updateFaceView(for: result)
+
+    //16 replace above with:
+    if faceViewHidden {
+      updateLaserView(for: result)
+    } else {
+      updateFaceView(for: result)
+    }
 
   }
 
