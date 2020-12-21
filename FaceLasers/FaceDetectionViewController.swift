@@ -104,6 +104,43 @@ extension FaceDetectionViewController {
   }
 
   
+  //7 helper methods for face landmarks: Define a method which converts a landmark point to something that can be drawn on the screen.
+  func landmark(point: CGPoint, to rect: CGRect) -> CGPoint {
+    // Calculate the absolute position of the normalized point by using a Core Graphics extension defined in CoreGraphicsExtensions.swift
+    let absolute = point.absolutePoint(in: rect)
+    // Convert the point to the preview layer’s coordinate system.
+    let converted = previewLayer.layerPointConverted(fromCaptureDevicePoint: absolute)
+    
+    return converted
+  }
+
+  //8 method takes an array of these landmark points and converts them all.
+  func landmark(points: [CGPoint]?, to rect: CGRect) -> [CGPoint]? {
+    return points?.compactMap { landmark(point: $0, to: rect) }
+  }
+
+  //9 make it easier to work with.
+  func updateFaceView(for result: VNFaceObservation) {
+    defer {
+      DispatchQueue.main.async {
+        self.faceView.setNeedsDisplay()
+      }
+    }
+
+    let box = result.boundingBox
+    faceView.boundingBox = convert(rect: box)
+
+    guard let landmarks = result.landmarks else {
+      return
+    }
+    // make up the leftEye into coordinates that work with the preview layer. If everything went well, you assign those converted points to leftEye
+    if let leftEye = landmark(
+      points: landmarks.leftEye?.normalizedPoints, // declared in VNFaceLandmarkRegion2D
+      to: result.boundingBox) {
+      faceView.leftEye = leftEye // declared in FaceView
+    }
+  }
+  
   //3 define detectedFace method
   func detectedFace(request: VNRequest, error: Error?) {
     // Extract the first result from the array of face observation results.
@@ -116,14 +153,18 @@ extension FaceDetectionViewController {
         return
     }
       
-    // Set the bounding box to draw in the FaceView after converting it from the coordinates in the VNFaceObservation.
-    let box = result.boundingBox
-    faceView.boundingBox = convert(rect: box)
-      
-    // call setNeedsDisplay method to make sure FaceView is redrawn
-    DispatchQueue.main.async {
-      self.faceView.setNeedsDisplay()
-    }
+//    // Set the bounding box to draw in the FaceView after converting it from the coordinates in the VNFaceObservation.
+//    let box = result.boundingBox
+//    faceView.boundingBox = convert(rect: box)
+//
+//    // call setNeedsDisplay method to make sure FaceView is redrawn
+//    DispatchQueue.main.async {
+//      self.faceView.setNeedsDisplay()
+//    }
+    
+    //10 replaced code above with
+    updateFaceView(for: result)
+
   }
 
 }
@@ -139,7 +180,10 @@ extension FaceDetectionViewController: AVCaptureVideoDataOutputSampleBufferDeleg
     }
 
     // Create a face detection request to detect face bounding boxes and pass the results to a completion handler.
-    let detectFaceRequest = VNDetectFaceRectanglesRequest(completionHandler: detectedFace) //call func detectedFace after completing
+//    let detectFaceRequest = VNDetectFaceRectanglesRequest(completionHandler: detectedFace) //call func detectedFace after completing
+    
+    //6 to detect face landmarks update request type
+    let detectFaceRequest = VNDetectFaceLandmarksRequest(completionHandler: detectedFace)
 
     // Use your previously defined sequence request handler to perform your face detection request on the image.
     do {

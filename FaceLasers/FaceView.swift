@@ -32,7 +32,7 @@ class FaceView: UIView {
     }
   }
   
-  //5
+  //5 draw red square around your face
   override func draw(_ rect: CGRect) {
     // get the current graphics context
     guard let context = UIGraphicsGetCurrentContext() else {
@@ -52,6 +52,18 @@ class FaceView: UIView {
 
     // draw path .addRect
     context.strokePath()
-
+    
+    //11 add drawing for eye
+    UIColor.white.setStroke()
+        
+    if !leftEye.isEmpty {
+      // Add lines between the points that define the leftEye, if there are any points.
+      context.addLines(between: leftEye)
+      context.closePath()
+      // Stroke the path, to make it visible.
+      context.strokePath()
+    }
+    // With Vision, you should expect to see the outline drawn not on your left eye, but on your eye which is on the left side of the image.
+    
   }
 }
