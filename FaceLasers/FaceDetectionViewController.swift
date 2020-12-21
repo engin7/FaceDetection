@@ -6,6 +6,8 @@ import Vision
 class FaceDetectionViewController: UIViewController {
   @IBOutlet var faceView: FaceView!
   @IBOutlet var laserView: LaserView!
+  @IBOutlet var tiltView: TiltView!
+  
   @IBOutlet var faceLaserLabel: UILabel!
   
   //1 you're using Sequence.. because you’ll perform face detection requests on a series of images, instead a single static one.
@@ -31,6 +33,7 @@ class FaceDetectionViewController: UIViewController {
     configureCaptureSession()
     
     laserView.isHidden = true
+    tiltView.isHidden = true
     
     maxX = view.bounds.maxX
     midY = view.bounds.midY
@@ -46,10 +49,12 @@ extension FaceDetectionViewController {
   @IBAction func handleTap(_ sender: UITapGestureRecognizer) {
     faceView.isHidden.toggle()
     laserView.isHidden.toggle()
+    tiltView.isHidden.toggle()
+    
     faceViewHidden = faceView.isHidden
     
     if faceViewHidden {
-      faceLaserLabel.text = "Lasers"
+      faceLaserLabel.text = "Lasers&Tilt"
     } else {
       faceLaserLabel.text = "Face"
     }
@@ -184,6 +189,8 @@ extension FaceDetectionViewController {
     }
 
   }
+
+  //MARK: - LASER method with yaw
   
   //14 Define a new method that will update the LaserView. It’s a bit like updateFaceView(for:).
   func updateLaserView(for result: VNFaceObservation) {
@@ -238,6 +245,46 @@ extension FaceDetectionViewController {
 
   }
 
+  //MARK: - LASER method for Tilt (up&down condition)
+  
+  func updateTiltView(for result: VNFaceObservation) {
+    
+    tiltView.clear()
+    
+    var origins: [CGPoint] = []
+    // laser origin based on left and right pupil
+    if let point = result.landmarks?.leftPupil?.normalizedPoints.first {
+      let origin = landmark(point: point, to: result.boundingBox)
+      origins.append(origin)
+    }
+    if let point = result.landmarks?.rightPupil?.normalizedPoints.first {
+      let origin = landmark(point: point, to: result.boundingBox)
+      origins.append(origin)
+    }
+   
+    // Calculate the average y coordinate of the laser origins.
+    let avgY = origins.map { $0.y }.reduce(0.0, +) / CGFloat(origins.count)
+    let focusY = (avgY < midY) ? 0.75 * maxY : 0.25 * maxY
+    // calculate the x coordinates of the pupils
+    let avgX = origins.map { $0.x }.reduce(0.0, +) / CGFloat(origins.count)
+    let focusX = avgX // we're only interested in tilt dirrection here so focus point is the middle of pupils
+    
+    let focus = CGPoint(x: focusX, y: focusY)
+    
+    
+    let laser = Tilt(origin: origins.first!, focus: focus)
+    let laser2 = Tilt(origin: origins[1], focus: focus)
+    
+    tiltView.add(tilt: laser)
+    tiltView.add(tilt: laser2)
+    
+    // Tell the iPhone that the TiltView should be redrawn.
+    DispatchQueue.main.async {
+      self.tiltView.setNeedsDisplay()
+    }
+    
+  }
+  
   
   //3 define detectedFace method
   func detectedFace(request: VNRequest, error: Error?) {
@@ -265,6 +312,8 @@ extension FaceDetectionViewController {
 
     //16 replace above with:
     if faceViewHidden {
+      updateTiltView(for: result)
+
       updateLaserView(for: result)
     } else {
       updateFaceView(for: result)

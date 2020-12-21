@@ -9,14 +9,14 @@ struct Tilt {
 }
 
 class TiltView: UIView {
-  private var tilt = Tilt(origin: 0, focus: 0)
+  private var tilt = Tilt(origin: .zero, focus: .zero)
   
-  func add(tilt: tilt) {
-    tilt = tilt
+  func add(tilt: Tilt) {
+    self.tilt = tilt
   }
   
   func clear() {
-    tilt = Tilt(origin: 0, focus: 0)
+    tilt = Tilt(origin: .zero, focus: .zero)
     DispatchQueue.main.async {
       self.setNeedsDisplay()
     }
@@ -33,7 +33,7 @@ class TiltView: UIView {
       // Push the current graphics state onto the stack.
       context.saveGState()
  
-      context.addLines(between: [tilt.origin, tilt.focus])
+    context.addLines(between: [tilt.origin, tilt.focus])
        
       // Draw a thicker white line in the direction of the laser.
       context.setStrokeColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.5)
@@ -41,7 +41,7 @@ class TiltView: UIView {
       context.strokePath()
           
       // Then draw a slightly thinner red line over the white line to give it a cool laser effect.
-      context.addLines(between: [laser.origin, laser.focus])
+      context.addLines(between: [tilt.origin, tilt.focus])
           
       context.setStrokeColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 0.8)
       context.setLineWidth(6.0)
