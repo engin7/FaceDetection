@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		287F6E1B2590A2B1009029A2 /* TiltView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287F6E1A2590A2B1009029A2 /* TiltView.swift */; };
 		5394F02521864DF5006E754C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5394F02321864DF4006E754C /* LaunchScreen.storyboard */; };
 		9FE0FDF721F66CBE002F945C /* UIViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0FDF621F66CBE002F945C /* UIViewExtension.swift */; };
 		9FE158AF21E836510090DA43 /* FaceDetectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE158AE21E836510090DA43 /* FaceDetectionViewController.swift */; };
@@ -19,6 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		287F6E1A2590A2B1009029A2 /* TiltView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiltView.swift; sourceTree = "<group>"; };
 		5394F02421864DF4006E754C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9FE0FDF621F66CBE002F945C /* UIViewExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewExtension.swift; sourceTree = "<group>"; };
 		9FE158AE21E836510090DA43 /* FaceDetectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDetectionViewController.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 				9FE158AE21E836510090DA43 /* FaceDetectionViewController.swift */,
 				9FE158BB21EA371C0090DA43 /* FaceView.swift */,
 				9FE158B721E850020090DA43 /* LaserView.swift */,
+				287F6E1A2590A2B1009029A2 /* TiltView.swift */,
 				D2A5F2071F4A9144005CD714 /* Main.storyboard */,
 				5394F02321864DF4006E754C /* LaunchScreen.storyboard */,
 				D2A5F20A1F4A9144005CD714 /* Assets.xcassets */,
@@ -163,6 +166,7 @@
 				9FE158BA21E852010090DA43 /* CoreGraphicsExtensions.swift in Sources */,
 				9FE0FDF721F66CBE002F945C /* UIViewExtension.swift in Sources */,
 				9FE158AF21E836510090DA43 /* FaceDetectionViewController.swift in Sources */,
+				287F6E1B2590A2B1009029A2 /* TiltView.swift in Sources */,
 				9FE158BC21EA371C0090DA43 /* FaceView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
