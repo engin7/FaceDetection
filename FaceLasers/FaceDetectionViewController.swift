@@ -271,13 +271,12 @@ extension FaceDetectionViewController {
     
     let focus = CGPoint(x: focusX, y: focusY)
     
+    let originsCenter = CGPoint(x: avgX, y: avgY)
     
-    let laser = Tilt(origin: origins.first!, focus: focus)
-    let laser2 = Tilt(origin: origins[1], focus: focus)
-    
+    let laser = Tilt(origin: originsCenter, focus: focus)
+   
     tiltView.add(tilt: laser)
-    tiltView.add(tilt: laser2)
-    
+  
     // Tell the iPhone that the TiltView should be redrawn.
     DispatchQueue.main.async {
       self.tiltView.setNeedsDisplay()
