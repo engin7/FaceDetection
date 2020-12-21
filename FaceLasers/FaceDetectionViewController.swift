@@ -27,7 +27,12 @@ class FaceDetectionViewController: UIViewController {
   var maxX: CGFloat = 0.0
   var midY: CGFloat = 0.0
   var maxY: CGFloat = 0.0
+  
+  var faceMidY: CGFloat = 0.0
+  var faceMaxY: CGFloat = 0.0
 
+  
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     configureCaptureSession()
@@ -38,6 +43,7 @@ class FaceDetectionViewController: UIViewController {
     maxX = view.bounds.maxX
     midY = view.bounds.midY
     maxY = view.bounds.maxY
+     
     
     session.startRunning()
   }
@@ -127,7 +133,9 @@ extension FaceDetectionViewController {
   //9 make it easier to work with.
   func updateFaceView(for result: VNFaceObservation) {
     defer {
-      DispatchQueue.main.async {
+      DispatchQueue.main.async { [self] in
+        faceMidY = faceView.boundingBox.midY // set last center of the face in the screen and max Y position
+        faceMaxY = faceView.boundingBox.maxY
         self.faceView.setNeedsDisplay()
       }
     }
@@ -264,7 +272,10 @@ extension FaceDetectionViewController {
    
     // Calculate the average y coordinate of the laser origins.
     let avgY = origins.map { $0.y }.reduce(0.0, +) / CGFloat(origins.count)
-    let focusY = (avgY < midY) ? 0.75 * maxY : 0.25 * maxY
+    
+    // compare pupils location to center of the face
+    
+    let focusY = (avgY < faceMidY) ? 0.75 * faceMaxY + CGFloat(200) : 0.25 * faceMaxY 
     // calculate the x coordinates of the pupils
     let avgX = origins.map { $0.x }.reduce(0.0, +) / CGFloat(origins.count)
     let focusX = avgX // we're only interested in tilt dirrection here so focus point is the middle of pupils
@@ -312,7 +323,6 @@ extension FaceDetectionViewController {
     //16 replace above with:
     if faceViewHidden {
       updateTiltView(for: result)
-
       updateLaserView(for: result)
     } else {
       updateFaceView(for: result)
