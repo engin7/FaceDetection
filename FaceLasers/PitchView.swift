@@ -3,20 +3,20 @@
 
 import UIKit
 
-struct Tilt {
+struct Pitch {
   var origin: CGPoint
   var focus: CGPoint
 }
 
-class TiltView: UIView {
-  private var tilt = Tilt(origin: .zero, focus: .zero)
+class PitchView: UIView {
+  private var tilt = Pitch(origin: .zero, focus: .zero)
   
-  func add(tilt: Tilt) {
+  func add(tilt: Pitch) {
     self.tilt = tilt
   }
   
   func clear() {
-    tilt = Tilt(origin: .zero, focus: .zero)
+    tilt = Pitch(origin: .zero, focus: .zero)
     DispatchQueue.main.async {
       self.setNeedsDisplay()
     }

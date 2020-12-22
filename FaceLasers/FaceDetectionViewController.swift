@@ -6,7 +6,7 @@ import Vision
 class FaceDetectionViewController: UIViewController {
   @IBOutlet var faceView: FaceView!
   @IBOutlet var laserView: LaserView!
-  @IBOutlet var tiltView: TiltView!
+  @IBOutlet var pitchView: PitchView!
   
   @IBOutlet var faceLaserLabel: UILabel!
   
@@ -28,17 +28,12 @@ class FaceDetectionViewController: UIViewController {
   var midY: CGFloat = 0.0
   var maxY: CGFloat = 0.0
   
-  var faceMidY: CGFloat = 0.0
-  var faceMaxY: CGFloat = 0.0
-
-  
-  
   override func viewDidLoad() {
     super.viewDidLoad()
     configureCaptureSession()
     
     laserView.isHidden = true
-    tiltView.isHidden = true
+    pitchView.isHidden = true
     
     maxX = view.bounds.maxX
     midY = view.bounds.midY
@@ -55,7 +50,7 @@ extension FaceDetectionViewController {
   @IBAction func handleTap(_ sender: UITapGestureRecognizer) {
     faceView.isHidden.toggle()
     laserView.isHidden.toggle()
-    tiltView.isHidden.toggle()
+    pitchView.isHidden.toggle()
     
     faceViewHidden = faceView.isHidden
     
@@ -134,8 +129,6 @@ extension FaceDetectionViewController {
   func updateFaceView(for result: VNFaceObservation) {
     defer {
       DispatchQueue.main.async { [self] in
-        faceMidY = faceView.boundingBox.midY // set last center of the face in the screen and max Y position
-        faceMaxY = faceView.boundingBox.maxY
         self.faceView.setNeedsDisplay()
       }
     }
@@ -255,9 +248,9 @@ extension FaceDetectionViewController {
 
   //MARK: - LASER method for Tilt (up&down condition)
   
-  func updateTiltView(for result: VNFaceObservation) {
+  func updatePitchView(for result: VNFaceObservation) {
     
-    tiltView.clear()
+    pitchView.clear()
     
     var origins: [CGPoint] = []
     // laser origin based on left and right pupil
@@ -273,9 +266,33 @@ extension FaceDetectionViewController {
     // Calculate the average y coordinate of the laser origins.
     let avgY = origins.map { $0.y }.reduce(0.0, +) / CGFloat(origins.count)
     
-    // compare pupils location to center of the face
+    // get eyebrow locations
+    var eyebrowOrigins: [CGPoint] = []
     
-    let focusY = (avgY < faceMidY) ? 0.75 * faceMaxY + CGFloat(200) : 0.25 * faceMaxY 
+    if let point = result.landmarks?.leftEyebrow?.normalizedPoints.first {
+      let origin = landmark(point: point, to: result.boundingBox)
+      eyebrowOrigins.append(origin)
+    }
+    if let point = result.landmarks?.rightEyebrow?.normalizedPoints.first {
+      let origin = landmark(point: point, to: result.boundingBox)
+      eyebrowOrigins.append(origin)
+    }
+    
+    // Calculate the average y coordinate of the laser origins.
+    let eyebrowAvgY = eyebrowOrigins.map { $0.y }.reduce(0.0, +) / CGFloat(origins.count)
+    
+    // compare pupils location to eye brows
+    
+    var focusY:  CGFloat = 0
+    
+    if (avgY - eyebrowAvgY < CGFloat(23)) && (avgY - eyebrowAvgY > CGFloat(12)) {
+      focusY = avgY // straight look
+    } else if (avgY - eyebrowAvgY >= CGFloat(23)) {
+      focusY = CGFloat(1500) // looking down
+    } else if (avgY - eyebrowAvgY <= CGFloat(12)) {
+      focusY = CGFloat(-500) // looking up
+    }
+    
     // calculate the x coordinates of the pupils
     let avgX = origins.map { $0.x }.reduce(0.0, +) / CGFloat(origins.count)
     let focusX = avgX // we're only interested in tilt dirrection here so focus point is the middle of pupils
@@ -284,17 +301,16 @@ extension FaceDetectionViewController {
     
     let originsCenter = CGPoint(x: avgX, y: avgY)
     
-    let laser = Tilt(origin: originsCenter, focus: focus)
+    let laser = Pitch(origin: originsCenter, focus: focus)
    
-    tiltView.add(tilt: laser)
+    pitchView.add(tilt: laser)
   
     // Tell the iPhone that the TiltView should be redrawn.
     DispatchQueue.main.async {
-      self.tiltView.setNeedsDisplay()
+      self.pitchView.setNeedsDisplay()
     }
     
   }
-  
   
   //3 define detectedFace method
   func detectedFace(request: VNRequest, error: Error?) {
@@ -322,7 +338,7 @@ extension FaceDetectionViewController {
 
     //16 replace above with:
     if faceViewHidden {
-      updateTiltView(for: result)
+      updatePitchView(for: result)
       updateLaserView(for: result)
     } else {
       updateFaceView(for: result)
